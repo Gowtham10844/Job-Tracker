@@ -11,7 +11,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 60000, // 60s timeout to allow for Render free tier spin-up
 });
 
 // Request interceptor: Attach JWT token if present
@@ -30,10 +30,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   response => response,
   error => {
-    const message =
+    let message =
       error.response?.data?.message ||
       error.message ||
       'An unexpected network error occurred';
+
+    if (error.code === 'ECONNABORTED' || message.toLowerCase().includes('timeout')) {
+      message = 'Server was waking up from sleep. Please click Sign In again!';
+    }
 
     // If unauthorized or token expired, trigger clean logout event
     if (error.response?.status === 401) {

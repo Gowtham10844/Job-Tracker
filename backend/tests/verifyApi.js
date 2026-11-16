@@ -48,11 +48,11 @@ async function runTests() {
 
   server = app.listen(PORT, async () => {
     try {
-      // 1. Root Endpoint
-      console.log('1️⃣ Testing GET / (Root Health Check)...');
-      const rootRes = await request('GET', '/');
+      // 1. Root Endpoint / Health Check
+      console.log('1️⃣ Testing GET /api (API Health Check & Discovery)...');
+      const rootRes = await request('GET', '/api');
       console.log(`   Status: ${rootRes.status}, Name: ${rootRes.data.name}`);
-      if (rootRes.status !== 200) throw new Error('Root health check failed');
+      if (rootRes.status !== 200) throw new Error('API health check failed');
 
       // 2. Authentication: Login with pre-seeded demo user
       console.log('\n2️⃣ Testing POST /api/auth/login (Demo User)...');

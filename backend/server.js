@@ -72,6 +72,35 @@ app.use('/api/users', userRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/jobs', jobRoutes); // Backward compatibility
 
+// API Health check & Discovery route
+const apiStatusHandler = (req, res) => {
+  res.json({
+    status: 'ok',
+    name: 'JobTrack – Job Application Tracker API',
+    version: '2.0.1',
+    developer: 'Gowtham10844',
+    environment: process.env.NODE_ENV || 'development',
+    database:
+      mongoose.connection.readyState === 1 ? 'Connected (MongoDB)' : 'In-Memory / Fast Fallback',
+    endpoints: {
+      auth: ['POST /api/auth/register', 'POST /api/auth/login', 'GET /api/auth/me'],
+      applications: [
+        'GET /api/applications',
+        'POST /api/applications',
+        'GET /api/applications/:id',
+        'PUT /api/applications/:id',
+        'DELETE /api/applications/:id',
+      ],
+      dashboard: ['GET /api/dashboard/stats'],
+      users: ['GET /api/users/profile', 'PUT /api/users/profile'],
+      interviews: ['GET /api/interviews'],
+    },
+  });
+};
+
+app.get('/api', apiStatusHandler);
+app.get('/api/health', apiStatusHandler);
+
 // Serve frontend static build if available (supports unified single-platform deployment on Render)
 const currentDir = path.resolve();
 const possibleStaticDirs = [
@@ -93,30 +122,7 @@ if (staticDir) {
   });
 } else {
   // Health check / Welcome route when running in API-only mode
-  app.get('/', (req, res) => {
-    res.json({
-      status: 'ok',
-      name: 'JobTrack – Job Application Tracker API',
-      version: '2.0.1',
-      developer: 'Gowtham10844',
-      environment: process.env.NODE_ENV || 'development',
-      database:
-        mongoose.connection.readyState === 1 ? 'Connected (MongoDB)' : 'Connecting / Offline',
-      endpoints: {
-        auth: ['POST /api/auth/register', 'POST /api/auth/login', 'GET /api/auth/me'],
-        applications: [
-          'GET /api/applications',
-          'POST /api/applications',
-          'GET /api/applications/:id',
-          'PUT /api/applications/:id',
-          'DELETE /api/applications/:id',
-        ],
-        dashboard: ['GET /api/dashboard/stats'],
-        users: ['GET /api/users/profile', 'PUT /api/users/profile'],
-        interviews: ['GET /api/interviews'],
-      },
-    });
-  });
+  app.get('/', apiStatusHandler);
 }
 
 // 404 Route Handler
@@ -138,29 +144,34 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection & Server initialization
-const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jobtrack';
+const MONGODB_URI = process.env.MONGODB_URI;
 
-console.log('Attempting MongoDB connection...');
-
-mongoose
-  .connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-  })
-  .then(() => {
-    console.log('✅ MongoDB connected successfully to database');
-  })
-  .catch(err => {
-    console.warn('⚠️  MongoDB connection notice:', err.message);
-    console.warn(
-      '👉 Note: If using MongoDB Atlas, configure MONGODB_URI in backend/.env'
-    );
-  })
-  .finally(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 JobTrack Backend running on http://localhost:${PORT}`);
-      console.log(`📄 API Documentation available at http://localhost:${PORT}/`);
-    });
+// Start HTTP server immediately so Render health-checks and spin-ups respond instantly
+// (skip when running automated test runner which binds its own dedicated port)
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 JobTrack Backend running on http://localhost:${PORT}`);
+    console.log(`📄 API Documentation available at http://localhost:${PORT}/`);
   });
+}
+
+// Connect to MongoDB asynchronously if configured or in local development
+if (MONGODB_URI || process.env.NODE_ENV !== 'production') {
+  const uri = MONGODB_URI || 'mongodb://127.0.0.1:27017/jobtrack';
+  console.log('Attempting MongoDB connection...');
+  mongoose
+    .connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+    })
+    .then(() => {
+      console.log('✅ MongoDB connected successfully to database');
+    })
+    .catch(err => {
+      console.warn('⚠️  MongoDB connection notice:', err.message);
+      console.warn('👉 Note: Operating with fast in-memory dual-mode store for reliable academic demo.');
+    });
+} else {
+  console.log('ℹ️  No external MONGODB_URI configured. Running with high-performance in-memory demo data.');
+}
 
 export default app;

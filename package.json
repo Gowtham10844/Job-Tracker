@@ -9,7 +9,7 @@
     "backend:dev": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
-    "test:api": "node backend/tests/verifyApi.js"
+    "test:api": "NODE_ENV=test node backend/tests/verifyApi.js"
   },
   "keywords": [
     "mern",
