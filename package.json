@@ -4,7 +4,7 @@
   "description": "JobTrack – Complete Full-Stack MERN Job Application Tracker",
   "private": true,
   "scripts": {
-    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install --include=dev",
     "backend": "npm --prefix backend start",
     "backend:dev": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run dev",
