@@ -1,0 +1,29 @@
+{
+  "name": "jobtrack",
+  "version": "2.0.1",
+  "description": "JobTrack – Complete Full-Stack MERN Job Application Tracker",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "backend": "npm --prefix backend start",
+    "backend:dev": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "test:api": "node backend/tests/verifyApi.js"
+  },
+  "keywords": [
+    "mern",
+    "job-tracker",
+    "jobtrack",
+    "react",
+    "nodejs",
+    "express",
+    "mongodb",
+    "btech-internship"
+  ],
+  "author": "Gowtham Saimpu <sayimpugowtham@gmail.com>",
+  "contributors": [
+    "Gowtham Saimpu <sayimpugowtham@gmail.com>"
+  ],
+  "license": "MIT"
+}
