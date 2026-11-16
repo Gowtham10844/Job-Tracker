@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
+import path from 'path';
+import fs from 'fs';
 
 // Import Routes
 import authRoutes from './routes/auth.js';
@@ -70,31 +72,52 @@ app.use('/api/users', userRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/jobs', jobRoutes); // Backward compatibility
 
-// Health check / Welcome route
-app.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    name: 'JobTrack – Job Application Tracker API',
-    version: '2.0.0',
-    developer: 'Gowtham10844',
-    environment: process.env.NODE_ENV || 'development',
-    database:
-      mongoose.connection.readyState === 1 ? 'Connected (MongoDB)' : 'Connecting / Offline',
-    endpoints: {
-      auth: ['POST /api/auth/register', 'POST /api/auth/login', 'GET /api/auth/me'],
-      applications: [
-        'GET /api/applications',
-        'POST /api/applications',
-        'GET /api/applications/:id',
-        'PUT /api/applications/:id',
-        'DELETE /api/applications/:id',
-      ],
-      dashboard: ['GET /api/dashboard/stats'],
-      users: ['GET /api/users/profile', 'PUT /api/users/profile'],
-      interviews: ['GET /api/interviews'],
-    },
+// Serve frontend static build if available (supports unified single-platform deployment on Render)
+const currentDir = path.resolve();
+const possibleStaticDirs = [
+  path.join(currentDir, 'frontend/dist'),
+  path.join(currentDir, '../frontend/dist'),
+  path.join(currentDir, 'dist'),
+];
+
+const staticDir = possibleStaticDirs.find(p => fs.existsSync(path.join(p, 'index.html')));
+
+if (staticDir) {
+  console.log(`📦 Serving compiled frontend from ${staticDir}`);
+  app.use(express.static(staticDir));
+  app.get('*', (req, res, next) => {
+    if (req.originalUrl.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(staticDir, 'index.html'));
   });
-});
+} else {
+  // Health check / Welcome route when running in API-only mode
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'ok',
+      name: 'JobTrack – Job Application Tracker API',
+      version: '2.0.1',
+      developer: 'Gowtham10844',
+      environment: process.env.NODE_ENV || 'development',
+      database:
+        mongoose.connection.readyState === 1 ? 'Connected (MongoDB)' : 'Connecting / Offline',
+      endpoints: {
+        auth: ['POST /api/auth/register', 'POST /api/auth/login', 'GET /api/auth/me'],
+        applications: [
+          'GET /api/applications',
+          'POST /api/applications',
+          'GET /api/applications/:id',
+          'PUT /api/applications/:id',
+          'DELETE /api/applications/:id',
+        ],
+        dashboard: ['GET /api/dashboard/stats'],
+        users: ['GET /api/users/profile', 'PUT /api/users/profile'],
+        interviews: ['GET /api/interviews'],
+      },
+    });
+  });
+}
 
 // 404 Route Handler
 app.use((req, res, next) => {

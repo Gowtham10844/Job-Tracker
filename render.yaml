@@ -1,11 +1,11 @@
 services:
+  # Option 1: Unified Full-Stack Service (Frontend + Backend + API on Render in 1 single URL)
   - type: web
-    name: jobtrack-backend
+    name: jobtrack
     env: node
     plan: free
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm run install:all && npm run frontend:build
+    startCommand: npm run backend
     envVars:
       - key: NODE_ENV
         value: production
@@ -17,5 +17,3 @@ services:
         generateValue: true
       - key: MONGODB_URI
         sync: false
-      - key: CORS_ORIGIN
-        value: "*"
